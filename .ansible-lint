@@ -1,0 +1,4 @@
+offline: true
+
+warn_list:
+  - "name[missing]" # this is *sometimes* okay, like with a block or simple include

@@ -1,0 +1,83 @@
+---
+- name: "Install service executable"
+  block:
+    - name: "Look for existing step-ca binary {{ stepca_executable }}"
+      ansible.builtin.stat:
+        path: "{{ stepca_executable }}"
+      register: "stepca_executable_present"
+
+    - name: "Get currently installed step-ca version"
+      ansible.builtin.shell: >
+        set -o pipefail &&
+        {{ stepca_executable }} version | cut -d' ' -f 2 | cut -d'/' -f 2 | awk 'FNR == 1'
+      args:
+        executable: "/bin/bash"
+      changed_when: false
+      check_mode: false
+      register: "stepca_executable_version"
+      when: "stepca_executable_present.stat.exists"
+
+    - name: "Download and install step-ca"
+      when: (stepca_executable_version.stdout) | default("") != stepca_version
+      block:
+        - name: "Download and extract step-ca archive"
+          ansible.builtin.unarchive:
+            src: "{{ stepca_download_url }}"
+            dest: "/tmp/"
+            remote_src: true
+          retries: 3
+          delay: 3
+
+        - name: "Install step-ca binary"
+          ansible.builtin.copy:
+            src: "/tmp/step-ca_{{ stepca_version }}/step-ca"
+            dest: "{{ stepca_executable }}"
+            remote_src: true
+            mode: 0777
+          # notify: "Restart step-ca"
+      always:
+        - name: "Remove step-ca archive"
+          ansible.builtin.file:
+            path: "/tmp/step-ca_{{ stepca_version }}"
+            state: "absent"
+
+- name: "Install CLI executable"
+  block:
+    - name: "Look for existing step CLI binary {{ stepca_cli_executable }}"
+      ansible.builtin.stat:
+        path: "{{ stepca_cli_executable }}"
+      register: "stepca_cli_executable_present"
+
+    - name: "Get currently installed step CLI version"
+      ansible.builtin.shell: >
+        set -o pipefail &&
+        {{ stepca_cli_executable }} version | cut -d' ' -f 2 | cut -d'/' -f 2 | awk 'FNR == 1'
+      args:
+        executable: "/bin/bash"
+      changed_when: false
+      check_mode: false
+      register: "stepca_cli_executable_version"
+      when: "stepca_cli_executable_present.stat.exists"
+
+    - name: "Download and install step CLI"
+      when: (stepca_cli_executable_version.stdout) | default("") != stepca_cli_version
+      block:
+        - name: "Download and extract step CLI archive"
+          ansible.builtin.unarchive:
+            src: "{{ stepca_cli_download_url }}"
+            dest: "/tmp/"
+            remote_src: true
+          retries: 3
+          delay: 3
+
+        - name: "Install step CLI binary"
+          ansible.builtin.copy:
+            src: "/tmp/step_{{ stepca_cli_version }}/bin/step"
+            dest: "{{ stepca_cli_executable }}"
+            remote_src: true
+            mode: 0777
+      always:
+        - name: "Remove step archive"
+          ansible.builtin.file:
+            path: "/tmp/step_{{ stepca_cli_version }}"
+            state: "absent"

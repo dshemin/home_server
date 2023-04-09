@@ -1,0 +1,4 @@
+---
+- ansible.builtin.import_tasks: "prepare.yml"
+- ansible.builtin.import_tasks: "install.yml"
+- ansible.builtin.import_tasks: "setup.yml"

@@ -1,0 +1,5 @@
+---
+- name: "Restart CA"
+  ansible.builtin.systemd:
+    name: "{{ stepca_service_name }}"
+    state: "restarted"

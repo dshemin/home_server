@@ -1,0 +1,27 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: check-executables-have-shebangs
+  - repo: local
+    hooks:
+      - id: "ansible-lint"
+        name: "Ansible Lint"
+        language: "system"
+        entry: "venv/bin/ansible-lint"
+        args:
+          - "-P"
+          - "shared"
+      - id: "yamllint"
+        name: "YAML Lint"
+        language: "system"
+        entry: "venv/bin/yamllint"
+        types:
+          - file
+          - yaml
+        args:
+          - "--strict"

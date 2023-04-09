@@ -1,0 +1,28 @@
+[Unit]
+Description=step-ca service
+Documentation=https://smallstep.com/docs/step-ca
+Documentation=https://smallstep.com/docs/step-ca/certificate-authority-server-production
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=30
+StartLimitBurst=3
+ConditionFileNotEmpty={{ stepca_config_file }}
+ConditionFileNotEmpty={{ stepca_root_password_file }}
+
+[Service]
+Type=simple
+User={{ stepca_user }}
+Group={{ stepca_group }}
+Environment=STEPPATH={{ stepca_home_dir }}
+WorkingDirectory={{ stepca_home_dir }}
+ExecStart={{ stepca_executable }} {{ stepca_config_file }} --password-file {{ stepca_root_password_file }}
+ExecReload=/bin/kill --signal HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+StartLimitInterval=30
+StartLimitBurst=10
+
+
+[Install]
+WantedBy=multi-user.target
