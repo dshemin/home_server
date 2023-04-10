@@ -13,6 +13,7 @@ stepca_config_file: "{{ stepca_home_dir }}/config/ca.json"
 
 stepca_download_baseurl: "https://github.com/smallstep/certificates/releases/download/v{{ stepca_version }}"
 stepca_archive_name: "step-ca_linux_{{ stepca_version }}_{{ stepca_arch[ansible_architecture] }}.tar.gz"
+stepca_tmp_dir: "/tmp/step-ca_{{ stepca_version }}"
 stepca_download_url: "{{ stepca_download_baseurl }}/{{ stepca_archive_name }}"
 
 stepca_service_name: "step-ca.service"
@@ -22,6 +23,7 @@ stepca_cli_executable: "/usr/sbin/step"
 
 stepca_cli_download_baseurl: "https://github.com/smallstep/cli/releases/download/v{{ stepca_cli_version }}"
 stepca_cli_archive_name: "step_linux_{{ stepca_cli_version }}_{{ stepca_arch[ansible_architecture] }}.tar.gz"
+stepca_cli_tmp_dir: "/tmp/step_{{ stepca_cli_version }}/"
 stepca_cli_download_url: "{{ stepca_cli_download_baseurl }}/{{ stepca_cli_archive_name }}"
 
 stepca_arch:

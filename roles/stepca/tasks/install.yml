@@ -30,7 +30,7 @@
 
         - name: "Install step-ca binary"
           ansible.builtin.copy:
-            src: "/tmp/step-ca_{{ stepca_version }}/step-ca"
+            src: "{{ stepca_tmp_dir }}/step-ca"
             dest: "{{ stepca_executable }}"
             remote_src: true
             mode: 0777
@@ -38,7 +38,7 @@
       always:
         - name: "Remove step-ca archive"
           ansible.builtin.file:
-            path: "/tmp/step-ca_{{ stepca_version }}"
+            path: "{{ stepca_tmp_dir }}"
             state: "absent"
 
 - name: "Install CLI executable"
@@ -72,12 +72,12 @@
 
         - name: "Install step CLI binary"
           ansible.builtin.copy:
-            src: "/tmp/step_{{ stepca_cli_version }}/bin/step"
+            src: "{{ stepca_cli_tmp_dir }}/bin/step"
             dest: "{{ stepca_cli_executable }}"
             remote_src: true
             mode: 0777
       always:
         - name: "Remove step archive"
           ansible.builtin.file:
-            path: "/tmp/step_{{ stepca_cli_version }}"
+            path: "{{ stepca_cli_tmp_dir }}"
             state: "absent"
