@@ -1,0 +1,14 @@
+---
+- name: "Systemd unit file is present"
+  ansible.builtin.template:
+    src: "etcd.service.j2"
+    dest: "{{ etcd_service_file }}"
+    owner: "root"
+    group: "root"
+    mode: 0644
+
+- name: "Service is enabled and running"
+  ansible.builtin.systemd:
+    name: "{{ etcd_service_name }}"
+    state: "started"
+    enabled: true

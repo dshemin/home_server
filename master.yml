@@ -1,10 +1,10 @@
 ---
 - name: "Setup master node"
-  hosts: master
+  hosts: "master"
   vars_files:
     - "vars/{{ env }}.yml"
   roles:
-    - role: stepca
+    - role: "stepca"
       stepca_version: "0.23.2"
       stepca_cli_version: "0.23.4"
       stepca_root_password: "{{ stepca.root_password }}"
@@ -12,3 +12,5 @@
       stepca_dns: "127.0.0.1,home"
       stepca_address: ":9000"
       stepca_provisioner: "dshemin@home"
+    - role: "etcd"
+      etcd_version: "3.5.7"

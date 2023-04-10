@@ -1,0 +1,43 @@
+---
+- name: "Create directories"
+  ansible.builtin.file:
+    name: "{{ item }}"
+    mode: 0700
+    state: "directory"
+  with_items:
+    - "{{ etcd_home_dir }}"
+    - "{{ etcd_data_dir }}"
+    - "{{ etcd_certs_dir }}"
+
+- name: "Get root CA cert"
+  ansible.builtin.command: "{{ stepca_cli_executable }} ca root"
+  register: "etcd_root_ca"
+
+- name: "Put root CA cert"
+  ansible.builtin.copy:
+    content: "{{ etcd_root_ca.stdout }}"
+    dest: "{{ etcd_ca_root_file }}"
+    mode: 0600
+
+- name: "Generate certs"
+  ansible.builtin.command:
+    cmd: >-
+      {{ stepca_cli_executable }} certificate create
+      --csr
+      --insecure
+      --no-password
+      --kty=RSA
+      --size=2048
+      "127.0.0.1"
+      {{ etcd_csr_file }}
+      {{ etcd_key_file }}
+    creates: "{{ etcd_key_file }}"
+
+- name: "Sign cert"
+  ansible.builtin.command:
+    cmd: >-
+      {{ stepca_cli_executable }} ca sign
+      --provisioner acme
+      {{ etcd_csr_file }}
+      {{ etcd_cert_file }}
+    creates: "{{ etcd_cert_file }}"
