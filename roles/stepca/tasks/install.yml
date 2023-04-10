@@ -34,7 +34,7 @@
             dest: "{{ stepca_executable }}"
             remote_src: true
             mode: 0777
-          # notify: "Restart step-ca"
+          notify: "Restart step-ca"
       always:
         - name: "Remove step-ca archive"
           ansible.builtin.file:
