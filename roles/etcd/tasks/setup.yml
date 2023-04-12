@@ -12,3 +12,4 @@
     name: "{{ etcd_service_name }}"
     state: "started"
     enabled: true
+    daemon_reload: true

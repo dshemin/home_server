@@ -1,0 +1,40 @@
+---
+- name: "Look for existing coredns binary {{ coredns_executable }}"
+  ansible.builtin.stat:
+    path: "{{ coredns_executable }}"
+  register: "coredns_executable_present"
+
+- name: "Get currently installed coredns version"
+  ansible.builtin.shell: >
+    set -o pipefail &&
+    {{ coredns_executable }} -version | cut -d'-' -f2 | head -n1
+  args:
+    executable: "/bin/bash"
+  changed_when: false
+  check_mode: false
+  register: "coredns_executable_version"
+  when: "coredns_executable_present.stat.exists"
+
+- name: "Download and install coredns"
+  when: (coredns_executable_version.stdout) | default("") != coredns_version
+  block:
+    - name: "Download and extract coredns archive"
+      ansible.builtin.unarchive:
+        src: "{{ coredns_download_url }}"
+        dest: "/tmp/"
+        remote_src: true
+      retries: 3
+      delay: 3
+
+    - name: "Install coredns binary"
+      ansible.builtin.copy:
+        src: "/tmp/coredns"
+        dest: "{{ coredns_executable }}"
+        remote_src: true
+        mode: 0777
+      # notify: "Restart coredns"
+  always:
+    - name: "Remove coredns"
+      ansible.builtin.file:
+        path: "/tmp/coredns"
+        state: "absent"

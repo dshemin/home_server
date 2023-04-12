@@ -1,0 +1,25 @@
+---
+- name: "Create group {{ coredns_group }}"
+  ansible.builtin.group:
+    name: "{{ coredns_group }}"
+    system: true
+    state: "present"
+
+- name: "Create user {{ coredns_user }}"
+  ansible.builtin.user:
+    name: "{{ coredns_user }}"
+    group: "{{ coredns_group }}"
+    password: "!"
+    home: "{{ coredns_home_dir }}"
+    shell: "/sbin/nologin"
+    comment: "CoreDNS user"
+    system: true
+    state: "present"
+
+- name: "Create home directory {{ coredns_home_dir }}"
+  ansible.builtin.file:
+    name: "{{ coredns_home_dir }}"
+    owner: "{{ coredns_user }}"
+    group: "{{ coredns_group }}"
+    mode: 0700
+    state: "directory"

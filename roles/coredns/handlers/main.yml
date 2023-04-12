@@ -1,0 +1,5 @@
+---
+- name: "Restart coredns"
+  ansible.builtin.systemd:
+    name: "{{ coredns_service_name }}"
+    state: "restarted"

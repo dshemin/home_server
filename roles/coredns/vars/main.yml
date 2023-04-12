@@ -1,0 +1,21 @@
+---
+coredns_version: "{{ undef(hint='You must specify CoreDNS version') }}"
+
+coredns_executable: "/usr/sbin/coredns"
+
+coredns_user: "coredns"
+coredns_group: "{{ coredns_user }}"
+
+coredns_home_dir: "/home/{{ coredns_user }}"
+coredns_config_file: "{{ coredns_home_dir }}/Corefile"
+
+coredns_service_name: "coredns.service"
+coredns_service_file: "/etc/systemd/system/{{ coredns_service_name }}"
+
+coredns_download_baseurl: "https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}"
+coredns_archive_name: "coredns_{{ coredns_version }}_linux_{{ coredns_arch[ansible_architecture] }}.tgz"
+coredns_download_url: "{{ coredns_download_baseurl }}/{{ coredns_archive_name }}"
+
+coredns_arch:
+  x86_64: "amd64"
+  aarch64: "arm64"

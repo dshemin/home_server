@@ -35,6 +35,7 @@
     name: "{{ stepca_service_name }}"
     state: "started"
     enabled: true
+    daemon_reload: true
 
 - name: "Check is already bootstrapped"
   ansible.builtin.command: "{{ stepca_cli_executable }} ca health"
