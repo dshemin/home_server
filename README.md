@@ -7,3 +7,4 @@ List of used components:
 
 - [SmallStep](https://smallstep.com/) - PKI management
 - [etcd](https://etcd.io/) - distributed k/v storage
+- [CoreDNS](https://coredns.io/) - DNS server
