@@ -13,8 +13,5 @@
       stepca_address: ":9000"
       stepca_provisioner: "dshemin@home"
 
-    - role: "etcd"
-      etcd_version: "3.5.7"
-
     - role: "coredns"
       coredns_version: "1.10.1"
