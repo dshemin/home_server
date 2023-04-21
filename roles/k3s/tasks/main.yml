@@ -1,0 +1,11 @@
+---
+- name: "Check target OS"
+  ansible.builtin.fail:
+    msg: "Only AlmaLinux is supported, current system is {{ ansible_facts.system }}"
+  when: 'ansible_facts.distribution != "AlmaLinux"'
+
+- ansible.builtin.include_tasks: "prepare.yml"
+
+- ansible.builtin.include_tasks: "install.yml"
+
+- ansible.builtin.include_tasks: "setup.yml"

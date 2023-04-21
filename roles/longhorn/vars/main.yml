@@ -1,0 +1,4 @@
+---
+longhorn_version: "{{ undef(hint='You must specify K3S version') }}"
+# Настаивают ставить именно в этот неймспейс.
+longhorn_namespace: "longhorn-system"

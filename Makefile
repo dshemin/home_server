@@ -21,7 +21,7 @@ lint:
 deps: $(VENV_BIN)/activate
 	$(PIP) install -r requirements.txt
 	$(PRE_COMMIT) install
-	$(ANSIBLE_GALAXY) collection install -r requirements.yaml
+	$(ANSIBLE_GALAXY) collection install -r requirements.yml
 
 #
 # Setup virtual environment for python.

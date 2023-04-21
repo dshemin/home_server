@@ -1,0 +1,18 @@
+---
+- name: "Put systemd unit"
+  ansible.builtin.template:
+    src: "systemd.unit.j2"
+    dest: "{{ k3s_service_file }}"
+    mode: 0600
+
+- name: "Run k3s"
+  ansible.builtin.systemd:
+    service: "{{ k3s_service_name }}"
+    enabled: true
+    state: "started"
+
+- name: "Link {{ k3s_kubeconf_file }} to {{ k3s_user_kubeconf_file }}"
+  ansible.builtin.file:
+    src: "{{ k3s_kubeconf_file }}"
+    dest: "{{ k3s_user_kubeconf_file }}"
+    state: "link"

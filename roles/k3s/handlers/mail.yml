@@ -1,0 +1,5 @@
+---
+- name: "Restart k3s"
+  ansible.builtin.systemd:
+    service: "{{ k3s_service_name }}"
+    state: "restarted"

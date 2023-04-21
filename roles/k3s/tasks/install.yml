@@ -1,0 +1,49 @@
+---
+- name: "Look for existing k3s binary {{ k3s_executable }}"
+  ansible.builtin.stat:
+    path: "{{ k3s_executable }}"
+  register: "k3s_executable_present"
+
+- name: "Get currently installed k3s version"
+  ansible.builtin.shell: >
+    set -o pipefail &&
+    {{ k3s_executable }} --version | cut -d' ' -f 3 | head -n1
+  args:
+    executable: "/bin/bash"
+  changed_when: false
+  check_mode: false
+  register: "k3s_executable_version"
+  when: "k3s_executable_present.stat.exists"
+
+- name: "Install binary"
+  when: (k3s_executable_version.stdout) | default("") != k3s_version
+  block:
+    - name: "Download k3s binary"
+      ansible.builtin.get_url:
+        url: "{{ k3s_download_url }}"
+        checksum: "sha256:{{ k3s_checksum_url }}"
+        dest: "{{ k3s_executable }}"
+        mode: 0755
+      notify: "Restart k3s"
+
+    - name: "Create symlinks"
+      ansible.builtin.file:
+        src: "{{ k3s_executable }}"
+        dest: "{{ item }}"
+        state: "link"
+      with_items:
+        - "{{ k3s_kubectl_executable }}"
+        - "{{ k3s_crictl_executable }}"
+        - "{{ k3s_ctr_executable }}"
+
+- name: "Intall pip"
+  ansible.builtin.dnf:
+    name:
+      - "python3-pip"
+    state: "present"
+
+- name: "Install required python packages for provisioning"
+  ansible.builtin.pip:
+    name:
+      - "kubernetes"
+    state: "present"

@@ -1,0 +1,23 @@
+---
+- name: "Open apiserver port"
+  ansible.posix.firewalld:
+    port: "6443/tcp"
+    permanent: true
+    immediate: true
+    state: "enabled"
+
+- name: "Allow to pods"
+  ansible.posix.firewalld:
+    source: "{{ k3s_pods_cidr }}"
+    zone: "trusted"
+    permanent: true
+    immediate: true
+    state: "enabled"
+
+- name: "Allow to services"
+  ansible.posix.firewalld:
+    source: "{{ k3s_services_cidr }}"
+    zone: "trusted"
+    permanent: true
+    immediate: true
+    state: "enabled"

@@ -1,0 +1,17 @@
+---
+k3s_version: "{{ undef(hint='You must specify K3S version') }}"
+k3s_download_url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version | urlencode }}/k3s"
+k3s_checksum_url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version | urlencode }}/sha256sum-amd64.txt"
+
+k3s_executable: "/usr/sbin/k3s"
+k3s_kubectl_executable: "/usr/sbin/kubectl"
+k3s_crictl_executable: "/usr/sbin/crictl"
+k3s_ctr_executable: "/usr/sbin/ctr"
+k3s_kubeconf_file: "/etc/rancher/k3s/k3s.yaml"
+k3s_user_kubeconf_file: "{{ ansible_facts.user_dir }}/.kube/config"
+
+k3s_pods_cidr: "10.42.0.0/16"
+k3s_services_cidr: "10.43.0.0/16"
+
+k3s_service_name: "k3s.service"
+k3s_service_file: "/etc/systemd/system/{{ k3s_service_name }}"
