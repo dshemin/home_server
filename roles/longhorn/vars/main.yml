@@ -1,4 +1,6 @@
 ---
-longhorn_version: "{{ undef(hint='You must specify K3S version') }}"
+longhorn_version: "{{ undef(hint='You must specify Longhorn version') }}"
 # Настаивают ставить именно в этот неймспейс.
 longhorn_namespace: "longhorn-system"
+
+longhorn_iscsi_initiatorname_file: "/etc/iscsi/initiatorname.iscsi"

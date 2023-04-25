@@ -1,0 +1,32 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: longhorn
+  namespace: {{ longhorn_namespace | quote }}
+spec:
+  chart: longhorn
+  repo: https://charts.longhorn.io
+  targetNamespace: {{ longhorn_namespace | quote }}
+  version: {{ longhorn_version | quote }}
+  valuesContent: |-
+    persistence:
+      defaultClassReplicaCount: 1
+    defaultSettings:
+      defaultReplicaCount: 1
+    ingress:
+      enabled: false
+    csi:
+      attacherReplicaCount: 1
+      provisionerReplicaCount: 1
+      resizerReplicaCount: 1
+      snapshotterReplicaCount: 1
+    metrics:
+      enabled: false
+    longhornUI:
+      replicas: 1
+    longhornConversionWebhook:
+      replicas: 1
+    longhornAdmissionWebhook:
+      replicas: 1
+    longhornRecoveryBackend:
+      replicas: 1

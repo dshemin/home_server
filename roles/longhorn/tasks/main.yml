@@ -10,6 +10,30 @@
       - "iscsi-initiator-utils"
     state: "present"
 
+- name: "Get current initiator name"
+  ansible.builtin.slurp:
+    src: "{{ longhorn_iscsi_initiatorname_file }}"
+  register: "longhorn_iscsi_initiatorname_file_content"
+
+- name: "Setup initiator name"
+  when: "'InitiatorName=master:' not in longhorn_iscsi_initiatorname_file_content.content | b64decode"
+  block:
+    - name: "Generate initiator name"
+      ansible.builtin.shell: >
+        set -o pipefail &&
+        iscsi-iname -p 'InitiatorName=master' > initiatorname.iscsi
+      args:
+        executable: "/bin/bash"
+      changed_when: false
+      check_mode: false
+      register: "longhorn_iscsi_initiatorname_value"
+
+    - name: "Put initiator name"
+      ansible.builtin.copy:
+        content: "{{ longhorn_iscsi_initiatorname_value.stdout }}"
+        dest: "{{ longhorn_iscsi_initiatorname_file }}"
+        mode: 0644
+
 - name: "Create Longhorn namespace"
   kubernetes.core.k8s:
     name: "{{ longhorn_namespace }}"
@@ -19,5 +43,5 @@
 
 - name: "Create Helm CRD for Longhorn"
   kubernetes.core.k8s:
-    template: "longhorn.j2"
+    template: "helm.j2"
     state: "present"
