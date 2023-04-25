@@ -6,6 +6,6 @@
   forward . /etc/resolv.conf
 
   hosts {
-    {{ ansible_facts.default_ipv4.address }} master.home k3s.home
+    {{ ansible_facts.default_ipv4.address }} master.home
   }
 }
