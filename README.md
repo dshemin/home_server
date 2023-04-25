@@ -8,3 +8,4 @@ List of used components:
 - [K3S](https://k3s.io/) - lightweight Kubernetes
 - [Longhorn](https://longhorn.io/) - distributed block storage
 - [CoreDNS](https://coredns.io/) - DNS server
+- [PostgreSQL](https://www.postgresql.org/) - DB

@@ -1,0 +1,8 @@
+---
+postgresql_version: "{{ undef(hint='You must specify PostgreSQL version') }}"
+postgresql_namespace: "{{ undef(hint='You must specify PostgreSQL namespace') }}"
+
+postgresql_admin_password: "{{ undef(hint='You must specify PostgreSQL admin password') }}"
+
+postgresql_volume_size: "{{ undef(hint='You must specify PostgreSQL volume size') }}"
+postgresql_secret_name: "postgresql-secret"

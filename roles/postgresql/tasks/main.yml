@@ -1,0 +1,17 @@
+---
+- name: "Create PostgreSQL namespace"
+  kubernetes.core.k8s:
+    name: "{{ postgresql_namespace }}"
+    api_version: "v1"
+    kind: "Namespace"
+    state: "present"
+
+- name: "Create secret for PostgreSQL"
+  kubernetes.core.k8s:
+    template: "secret.j2"
+    state: "present"
+
+- name: "Create Helm CRD for PostgreSQL"
+  kubernetes.core.k8s:
+    template: "helm.j2"
+    state: "present"

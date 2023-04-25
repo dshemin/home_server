@@ -2,6 +2,7 @@
 - name: "Setup master node"
   hosts: "master"
   vars_files:
+    - "vars/main.yml"
     - "vars/{{ env }}.yml"
   roles:
     - role: "coredns"
@@ -12,3 +13,9 @@
 
     - role: "longhorn"
       longhorn_version: "1.4.1"
+
+    - role: "postgresql"
+      postgresql_version: "12.3.1"
+      postgresql_namespace: "{{ prod_namespace }}"
+      postgresql_admin_password: "{{ postgresql.root_password }}"
+      postgresql_volume_size: "{{ postgresql.volume_size }}"

@@ -1,0 +1,17 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: postgresql
+  namespace: {{ postgresql_namespace | quote }}
+spec:
+  chart: postgresql
+  repo: https://charts.bitnami.com/bitnami
+  targetNamespace: {{ postgresql_namespace | quote }}
+  version: {{ postgresql_version | quote }}
+  valuesContent: |-
+    auth:
+      existingSecret: {{ postgresql_secret_name | quote }}
+    architecture: "standalone"
+    primary:
+      persistence:
+        size: {{ postgresql_volume_size | quote }}
