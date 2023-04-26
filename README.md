@@ -9,3 +9,4 @@ List of used components:
 - [Longhorn](https://longhorn.io/) - distributed block storage
 - [CoreDNS](https://coredns.io/) - DNS server
 - [PostgreSQL](https://www.postgresql.org/) - DB
+- [Wiki.js](https://js.wiki/) - wiki engine

@@ -6,6 +6,6 @@
   forward . /etc/resolv.conf
 
   hosts {
-    {{ ansible_facts.default_ipv4.address }} master.home
+    {{ ansible_facts.default_ipv4.address }} wiki.home master.home
   }
 }

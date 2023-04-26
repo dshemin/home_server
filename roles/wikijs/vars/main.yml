@@ -1,0 +1,3 @@
+---
+wikijs_version: "{{ undef(hint='You must specify Wiki.js version') }}"
+wikijs_namespace: "{{ undef(hint='You must specify Wiki.js namespace') }}"

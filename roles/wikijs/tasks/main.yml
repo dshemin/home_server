@@ -1,0 +1,12 @@
+---
+- name: "Create Wiki.js namespace"
+  kubernetes.core.k8s:
+    name: "{{ wikijs_namespace }}"
+    api_version: "v1"
+    kind: "Namespace"
+    state: "present"
+
+- name: "Create Helm CRD for Wiki.js"
+  kubernetes.core.k8s:
+    template: "helm.j2"
+    state: "present"

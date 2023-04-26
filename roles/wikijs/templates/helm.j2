@@ -1,0 +1,25 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: wikijs
+  namespace: {{ wikijs_namespace | quote }}
+spec:
+  chart: wiki
+  repo: https://charts.js.wiki
+  targetNamespace: {{ wikijs_namespace | quote }}
+  version: {{ wikijs_version | quote }}
+  valuesContent: |-
+    ingress:
+      enabled: true
+      hosts:
+        - host: "wiki.home"
+          paths:
+            - path: "/"
+              pathType: "Prefix"
+    postgresql:
+      enabled: false
+      postgresqlDatabase: "wiki"
+      postgresqlUser: "postgres"
+      postgresqlHost: "postgresql"
+      existingSecret: {{ postgresql_secret_name | quote }}
+      existingSecretKey: "postgres-password"
