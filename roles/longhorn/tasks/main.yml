@@ -33,6 +33,7 @@
         content: "{{ longhorn_iscsi_initiatorname_value.stdout }}"
         dest: "{{ longhorn_iscsi_initiatorname_file }}"
         mode: 0644
+      notify: "Restart iscsid"
 
 - name: "Create Longhorn namespace"
   kubernetes.core.k8s:
