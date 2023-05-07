@@ -1,0 +1,3 @@
+---
+cert_manager_version: "{{ undef(hint='You must specify Cert Manager version') }}"
+cert_manager_namespace: "cert-manager"

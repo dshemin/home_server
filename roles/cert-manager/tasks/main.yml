@@ -1,0 +1,12 @@
+---
+- name: "Create Cert Manager namespace"
+  kubernetes.core.k8s:
+    name: "{{ cert_manager_namespace }}"
+    api_version: "v1"
+    kind: "Namespace"
+    state: "present"
+
+- name: "Create Helm CRD for Cert Manager"
+  kubernetes.core.k8s:
+    template: "helm.j2"
+    state: "present"

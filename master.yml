@@ -11,6 +11,9 @@
     - role: "k3s"
       k3s_version: "v1.26.3+k3s1"
 
+    - role: "cert-manager"
+      cert_manager_version: "1.11.1"
+
     - role: "longhorn"
       longhorn_version: "1.4.1"
 
