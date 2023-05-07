@@ -1,0 +1,4 @@
+---
+db_operator_version: "{{ undef(hint='You must specify DB Operator version') }}"
+db_operator_namespace: "db-operator"
+db_operator_main_instance_secret_name: "db-operator-main-instance-secret-name"

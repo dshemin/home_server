@@ -11,3 +11,4 @@ List of used components:
 - [PostgreSQL](https://www.postgresql.org/) - DB
 - [Wiki.js](https://js.wiki/) - wiki engine
 - [Cert Manager](https://cert-manager.io/) - X.509 certificate management
+- [DB Operator](https://github.com/kloeckner-i/db-operator) - database management

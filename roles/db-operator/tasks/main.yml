@@ -1,0 +1,22 @@
+---
+- name: "Create DB Operator namespace"
+  kubernetes.core.k8s:
+    name: "{{ db_operator_namespace }}"
+    api_version: "v1"
+    kind: "Namespace"
+    state: "present"
+
+- name: "Create secret for DB Operator"
+  kubernetes.core.k8s:
+    template: "secret.j2"
+    state: "present"
+
+- name: "Create Helm CRD for DB Operator"
+  kubernetes.core.k8s:
+    template: "operator.j2"
+    state: "present"
+
+- name: "Create Helm CRD for DB Instance"
+  kubernetes.core.k8s:
+    template: "instance.j2"
+    state: "present"

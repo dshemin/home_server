@@ -23,6 +23,11 @@
       postgresql_admin_password: "{{ postgresql.root_password }}"
       postgresql_volume_size: "{{ postgresql.volume_size }}"
 
+    - role: "db-operator"
+      db_operator_version: "1.7.0"
+      postgresql_namespace: "{{ prod_namespace }}"
+      postgresql_admin_password: "{{ postgresql.root_password }}"
+
     - role: "wikijs"
       wikijs_version: "2.2.20"
       wikijs_namespace: "{{ prod_namespace }}"

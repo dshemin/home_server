@@ -1,0 +1,13 @@
+apiVersion: kci.rocks/v1beta1
+kind: DbInstance
+metadata:
+  name: main
+  namespace: {{ postgresql_namespace | quote }}
+spec:
+  adminSecretRef:
+    Name: {{ db_operator_main_instance_secret_name | quote }}
+    Namespace: {{ db_operator_namespace | quote }}
+  engine: "postgres"
+  generic:
+    host: "postgresql.prod"
+    port: 5432
