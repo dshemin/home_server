@@ -6,6 +6,11 @@
     kind: "Namespace"
     state: "present"
 
+- name: "Create Database CRD for Wiki.js"
+  kubernetes.core.k8s:
+    template: "database.j2"
+    state: "present"
+
 - name: "Create Helm CRD for Wiki.js"
   kubernetes.core.k8s:
     template: "helm.j2"

@@ -1,7 +1,7 @@
 apiVersion: kci.rocks/v1beta1
 kind: DbInstance
 metadata:
-  name: main
+  name: {{ db_operator_main_instance_name | quote }}
   namespace: {{ postgresql_namespace | quote }}
 spec:
   adminSecretRef:

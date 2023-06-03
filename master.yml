@@ -25,9 +25,11 @@
 
     - role: "db-operator"
       db_operator_version: "1.7.0"
+      db_operator_main_instance_name: "{{ main_db_instance_name }}"
       postgresql_namespace: "{{ prod_namespace }}"
       postgresql_admin_password: "{{ postgresql.root_password }}"
 
     - role: "wikijs"
-      wikijs_version: "2.2.20"
+      wikijs_version: "2.2.0"
       wikijs_namespace: "{{ prod_namespace }}"
+      wikijs_db_instance_name: "{{ main_db_instance_name }}"

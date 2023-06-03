@@ -1,0 +1,10 @@
+apiVersion: kci.rocks/v1beta1
+kind: Database
+metadata:
+  name: {{ wikijs_db_name | quote }}
+  namespace: {{ wikijs_namespace | quote }}
+spec:
+  secretName: {{ wikijs_db_secret_name | quote }}
+  instance: {{ wikijs_db_instance_name | quote }}
+  backup:
+    enable: false
