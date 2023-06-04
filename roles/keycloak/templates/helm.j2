@@ -1,0 +1,44 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: keycloak
+  namespace: {{ keycloak_namespace | quote }}
+spec:
+  chart: keycloak
+  repo: https://charts.bitnami.com/bitnami
+  targetNamespace: {{ keycloak_namespace | quote }}
+  version: {{ keycloak_version | quote }}
+  valuesContent: |-
+    auth:
+      adminUser: "root"
+      existingSecret: {{ keycloak_secret_name | quote }}
+      passwordSecretKey: {{ keycloak_secret_password_key | quote }}
+    production: true
+    proxy: edge
+    ingress:
+      enabled: true
+      hostname: "keycloak.home"
+    service:
+      type: "ClusterIP"
+    postgresql:
+      enabled: false
+    externalDatabase:
+      password: "to_be_changed"
+    extraEnvVars:
+      - name: KC_DB
+        value: "postgres"
+      - name: KC_DB_URL
+        valueFrom:
+          secretKeyRef:
+            name: {{ keycloak_db_secret_name | quote }}
+            key: {{ keycloak_db_secret_jdbc_url_key | quote }}
+      - name: KC_DB_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: {{ keycloak_db_secret_name | quote }}
+            key: "POSTGRES_USER"
+      - name: KC_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: {{ keycloak_db_secret_name | quote }}
+            key: "POSTGRES_PASSWORD"

@@ -1,0 +1,12 @@
+apiVersion: kci.rocks/v1beta1
+kind: Database
+metadata:
+  name: {{ keycloak_db_name | quote }}
+  namespace: {{ keycloak_namespace | quote }}
+spec:
+  secretName: {{ keycloak_db_secret_name | quote }}
+  instance: {{ keycloak_db_instance_name | quote }}
+  backup:
+    enable: false
+  secretsTemplates:
+    {{ keycloak_db_secret_jdbc_url_key }}: {% raw %}"jdbc:{{ .Protocol }}://{{ .DatabaseHost }}:{{ .DatabasePort }}/{{ .DatabaseName }}"{% endraw %}

@@ -1,0 +1,12 @@
+---
+keycloak_version: "{{ undef(hint='You must specify Keycloak version') }}"
+keycloak_namespace: "{{ undef(hint='You must specify Keycloak namespace') }}"
+
+keycloak_secret_name: "keycloak-secret"
+keycloak_secret_password_key: "admin-pasword"
+keycloak_admin_password: "{{ undef(hint='You must specify Keycloak admin password') }}"
+
+keycloak_db_instance_name: "{{ undef(hint='You must specify DB Instance name for Keycloak') }}"
+keycloak_db_name: "keycloak"
+keycloak_db_secret_name: "keycloak-database"
+keycloak_db_secret_jdbc_url_key: "jdbc_url"

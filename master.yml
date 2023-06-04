@@ -29,6 +29,12 @@
       postgresql_namespace: "{{ prod_namespace }}"
       postgresql_admin_password: "{{ postgresql.root_password }}"
 
+    - role: "keycloak"
+      keycloak_version: "14.2.0"
+      keycloak_namespace: "{{ prod_namespace }}"
+      keycloak_admin_password: "{{ keycloak.admin_password }}"
+      keycloak_db_instance_name: "{{ main_db_instance_name }}"
+
     - role: "wikijs"
       wikijs_version: "2.2.0"
       wikijs_namespace: "{{ prod_namespace }}"
