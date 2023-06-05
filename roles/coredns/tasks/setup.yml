@@ -8,6 +8,24 @@
     mode: 0600
   notify: "Restart coredns"
 
+- name: "Disable resolver"
+  ansible.builtin.template:
+    src: "disableresolv.conf.j2"
+    dest: "/etc/NetworkManager/conf.d/disableresolv.conf"
+    owner: "root"
+    group: "root"
+    mode: 0644
+  notify: "Restart NetworkManager"
+
+- name: "Add coredns script"
+  ansible.builtin.template:
+    src: "coredns.sh.j2"
+    dest: "/etc/NetworkManager/dispatcher.d/coredns"
+    owner: "root"
+    group: "root"
+    mode: 0755
+  notify: "Restart NetworkManager"
+
 - name: "Systemd unit file is present"
   ansible.builtin.template:
     src: "systemd.unit.j2"

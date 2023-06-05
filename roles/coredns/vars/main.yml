@@ -19,3 +19,8 @@ coredns_download_url: "{{ coredns_download_baseurl }}/{{ coredns_archive_name }}
 coredns_arch:
   x86_64: "amd64"
   aarch64: "arm64"
+
+coredns_names:
+  - keycloak.home
+  - wiki.home
+  - master.home

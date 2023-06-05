@@ -1,0 +1,14 @@
+#!/bin/bash
+
+case "$2" in
+  up)
+    sleep 3
+    service {{ coredns_service_name }} restart
+  ;;
+  down)
+    sleep 2
+    service {{ coredns_service_name }} restart
+  ;;
+esac
+
+exit $?

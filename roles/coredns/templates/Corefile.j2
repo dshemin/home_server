@@ -1,11 +1,19 @@
-.:53 {
+(common) {
   log
   errors
   health
+}
 
-  forward . /etc/resolv.conf
+home:53 {
+  import common
 
   hosts {
-    {{ ansible_facts.default_ipv4.address }} wiki.home keycloak.home master.home
+    {{ ansible_facts.default_ipv4.address }} {{ coredns_names | join(" ") }}
   }
+}
+
+.:53 {
+  import common
+
+  forward . /var/run/NetworkManager/resolv.conf
 }

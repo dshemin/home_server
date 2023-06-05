@@ -3,3 +3,8 @@
   ansible.builtin.systemd:
     service: "{{ coredns_service_name }}"
     state: "restarted"
+
+- name: "Restart NetworkManager"
+  ansible.builtin.systemd:
+    service: "NetworkManager"
+    state: "restarted"
