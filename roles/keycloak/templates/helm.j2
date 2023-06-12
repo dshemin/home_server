@@ -10,7 +10,7 @@ spec:
   version: {{ keycloak_version | quote }}
   valuesContent: |-
     auth:
-      adminUser: "root"
+      adminUser: {{ keycloak_admin_name | quote }}
       existingSecret: {{ keycloak_secret_name | quote }}
       passwordSecretKey: {{ keycloak_secret_password_key | quote }}
     production: true

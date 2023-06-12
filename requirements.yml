@@ -2,3 +2,6 @@
 collections:
     - name: "kubernetes.core"
       version: "2.4.0"
+    - name: "https://github.com/ansible-collections/community.general"
+      type: "git"
+      version: "07a5f07eaa349dcc603f5fbe5599c154f3e948d3"

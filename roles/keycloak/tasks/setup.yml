@@ -1,0 +1,36 @@
+---
+- name: "Create home realm"
+  community.general.keycloak_realm:
+    auth_keycloak_url: "{{ keycloak_auth_url }}"
+    auth_realm: "master"
+    auth_username: "{{ keycloak_admin_name }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    id: "{{ keycloak_realm }}"
+    realm: "{{ keycloak_realm }}"
+    state: "present"
+    display_name: "Дом"
+    internationalization_enabled: false
+    registration_allowed: false
+    remember_me: true
+    default_locale: "en"
+
+- name: "Create users"
+  community.general.keycloak_user:
+    auth_keycloak_url: "{{ keycloak_auth_url }}"
+    auth_realm: "master"
+    auth_username: "{{ keycloak_admin_name }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    realm: "{{ keycloak_realm }}"
+    username: "{{ item.username }}"
+    enabled: true
+    email_verified: true
+    first_name: "{{ item.firstName }}"
+    last_name: "{{ item.lastName }}"
+    email: "{{ item.email }}"
+    credentials:
+      - type: "password"
+        value: "{{ item.password }}"
+        temporary: false
+    state: "present"
+  no_log: true
+  with_items: "{{ keycloak_users }}"
