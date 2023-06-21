@@ -5,3 +5,7 @@ wikijs_namespace: "{{ undef(hint='You must specify Wiki.js namespace') }}"
 wikijs_db_instance_name: "{{ undef(hint='You must specify DB Instance name for Wiki.js') }}"
 wikijs_db_name: "wikijs"
 wikijs_db_secret_name: "wikijs-database"
+
+wikijs_admin_login: "admin@wiki.home"
+# TODO remove becore commit
+wikijs_admin_password: "123456"

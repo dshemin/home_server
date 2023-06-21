@@ -1,0 +1,12 @@
+---
+- name: "Install required python packages"
+  ansible.builtin.pip:
+    name:
+      - "gql"
+      - "aiohttp"
+
+- name: "Add keycloak authentications"
+  wikijs_authentications:
+    endpoint: "http://wiki.home/graphql"
+    auth_username: "{{ wikijs_admin_login }}"
+    auth_password: "{{ wikijs_admin_password }}"
