@@ -35,6 +35,7 @@
       keycloak_admin_password: "{{ keycloak.admin_password }}"
       keycloak_db_instance_name: "{{ main_db_instance_name }}"
       keycloak_users: "{{ keycloak.users }}"
+      keycloak_realm_secret: "{{ keycloak.secret }}"
 
     - role: "wikijs"
       wikijs_version: "2.2.0"

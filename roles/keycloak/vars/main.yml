@@ -14,5 +14,6 @@ keycloak_db_secret_jdbc_url_key: "jdbc_url"
 
 keycloak_auth_url: "http://keycloak.home"
 keycloak_realm: "home"
-
+keycloak_realm_secret: "{{ undef(hint='You must specify Keycloak realm secret') }}"
+keycloak_client_id: "home-client"
 keycloak_users: "{{ undef(hint='You must specify Keycloak users') }}"

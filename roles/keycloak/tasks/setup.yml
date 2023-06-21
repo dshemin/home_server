@@ -12,7 +12,30 @@
     internationalization_enabled: false
     registration_allowed: false
     remember_me: true
-    default_locale: "en"
+    enabled: true
+
+- name: "Create client"
+  community.general.keycloak_client:
+    auth_keycloak_url: "{{ keycloak_auth_url }}"
+    auth_realm: "master"
+    auth_username: "{{ keycloak_admin_name }}"
+    auth_password: "{{ keycloak_admin_password }}"
+    name: "Home client"
+    client_id: "{{ keycloak_client_id }}"
+    enabled: true
+    protocol: "openid-connect"
+    realm: "{{ keycloak_realm }}"
+    standard_flow_enabled: true
+    state: "present"
+    root_url: "http://keycloak.home/"
+    redirect_uris:
+      - "http://wiki.home/*"
+    web_origins:
+      - "+"
+    public_client: false
+    client_authenticator_type: "client-secret"
+    secret: "{{ keycloak_realm_secret }}"
+
 
 - name: "Create users"
   community.general.keycloak_user:
