@@ -4,7 +4,7 @@
 # Copyright: (c) 2023, Dmitriy Shemin <me@shemindmitry.tech>
 from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.client import WikiJSClient
+from ansible.module_utils.wikijs import Client as WikiJSClient
 
 __metaclass__ = type
 
@@ -1203,13 +1203,14 @@ def run_module():
         module.exit_json(**result)
 
     client = WikiJSClient(
-        module.params['endpoint'],
-        module.params['auth_username'],
-        module.params['auth_password'],
+        str(module.params['endpoint']),
+        str(module.params['auth_username']),
+        str(module.params['auth_password']),
     )
 
-    # Get current list of authorizations.
+    previous = client.get_list_of_authentications()
 
+    result["previous"] = [x.to_dict() for x in previous]
     module.exit_json(**result)
 
 
