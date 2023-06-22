@@ -4,8 +4,7 @@
 # Copyright: (c) 2023, Dmitriy Shemin <me@shemindmitry.tech>
 from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
-from gql import gql, Client
-from gql.transport.aiohttp import AIOHTTPTransport
+from ansible.module_utils.client import WikiJSClient
 
 __metaclass__ = type
 
@@ -1203,47 +1202,15 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    client = setup_client(
+    client = WikiJSClient(
         module.params['endpoint'],
         module.params['auth_username'],
         module.params['auth_password'],
     )
 
+    # Get current list of authorizations.
+
     module.exit_json(**result)
-
-
-def setup_client(url: str, username: str, password: str) -> Client:
-    transport = AIOHTTPTransport(url=url)
-
-    # Create temporary client for obtaining JWT access token.
-    client = Client(transport=transport, fetch_schema_from_transport=True)
-
-    query = gql(
-        """
-mutation ($username: String!, $password: String!) {
-  authentication {
-    login(username: $username, password: $password, strategy: "local") {
-      jwt
-    }
-  }
-}
-"""
-    )
-
-    variables = {
-        "username": username,
-        "password": password,
-    }
-
-    result = client.execute(query, variable_values=variables)
-    jwt = result['authentication']['login']['jwt']
-
-    # Create a "real" client with necessary headers.
-
-    transport = AIOHTTPTransport(url=url, headers={
-        "Authorization": 'Bearer {}'.format(jwt),
-    })
-    return Client(transport=transport, fetch_schema_from_transport=True)
 
 
 def main():
