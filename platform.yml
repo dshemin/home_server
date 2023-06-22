@@ -1,0 +1,38 @@
+---
+- name: "Setup platform"
+  hosts: "master"
+  vars_files:
+    - "vars/main.yml"
+    - "vars/{{ env }}.yml"
+  roles:
+    - role: "coredns"
+      coredns_version: "1.10.1"
+
+    - role: "k3s"
+      k3s_version: "v1.26.3+k3s1"
+
+    - role: "cert-manager"
+      cert_manager_version: "1.11.1"
+
+    - role: "longhorn"
+      longhorn_version: "1.4.1"
+
+    - role: "postgresql"
+      postgresql_version: "12.3.1"
+      postgresql_namespace: "{{ prod_namespace }}"
+      postgresql_admin_password: "{{ postgresql.root_password }}"
+      postgresql_volume_size: "{{ postgresql.volume_size }}"
+
+    - role: "db-operator"
+      db_operator_version: "1.7.0"
+      db_operator_main_instance_name: "{{ main_db_instance_name }}"
+      postgresql_namespace: "{{ prod_namespace }}"
+      postgresql_admin_password: "{{ postgresql.root_password }}"
+
+    - role: "keycloak"
+      keycloak_version: "14.2.0"
+      keycloak_namespace: "{{ prod_namespace }}"
+      keycloak_admin_password: "{{ keycloak.admin_password }}"
+      keycloak_db_instance_name: "{{ main_db_instance_name }}"
+      keycloak_users: "{{ keycloak.users }}"
+      keycloak_realm_secret: "{{ keycloak.secret }}"
