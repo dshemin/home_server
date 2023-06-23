@@ -6,6 +6,13 @@ from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.wikijs import Client as WikiJSClient
 
+try:
+    import gql
+except ImportError:
+    HAS_GQL = False
+else:
+    HAS_GQL = True
+
 __metaclass__ = type
 
 DOCUMENTATION = r'''
@@ -1198,6 +1205,9 @@ def run_module():
         argument_spec=module_args,
         supports_check_mode=True
     )
+
+    if not HAS_GQL:
+        module.fail_json(msg="python gql package not installed on target host")
 
     if module.check_mode:
         module.exit_json(**result)
