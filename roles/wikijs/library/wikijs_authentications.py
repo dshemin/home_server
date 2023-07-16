@@ -2,9 +2,14 @@
 # -*- coding: utf-8 -*-
 
 # Copyright: (c) 2023, Dmitriy Shemin <me@shemindmitry.tech>
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+import json
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.wikijs import Client as WikiJSClient
+from ansible.module_utils.wikijs import AuthenticationStrategyInput, KeyValuePair
+from ansible.module_utils.wikijs import (
+    Client as WikiJSClient,
+    is_authentication_strategy_inputs_diff,
+)
 
 try:
     import gql
@@ -15,7 +20,7 @@ else:
 
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: wikijs_authentications
 
@@ -89,6 +94,12 @@ options:
                 description: Automatically assign new users to these groups.
                 type: list
                 elements: int
+            is_enabled:
+                description: Are users able to login using this strategy?
+                type: bool
+            order:
+                description: The order of strategy.
+                type: int
             auth0_domain:
                 description:
                     - Auth0 domain.
@@ -104,7 +115,7 @@ options:
                     - Application Client Secret.
                     - Required only for "auth0" strategy.
                 type: str
-            azure_ad:
+            azure_entrypoint:
                 description:
                     - The metadata endpoint provided by the Microsoft Identity Portal that provides the keys and other important information at runtime.
                     - Required only for "azure" strategy.
@@ -141,12 +152,12 @@ options:
                     - Required only for "cas" strategy.
                 type: str
                 default: "email"
-            cas_attr_key_username:
+            cas_attr_key_display_name:
                 description:
                     - Attribute key which contains the users display name (leave empty if there is none).
                     - Required only for "cas" strategy.
                 type: str
-            cas_attr_key_id:
+            cas_attr_key_unique_id:
                 description:
                     - Attribute key which contains the unique identifier of a user. (if empty, username will be used).
                     - Required only for "cas" strategy.
@@ -176,7 +187,7 @@ options:
                     - Application Client Secret.
                     - Required only for "dropbox" strategy.
                 type: str
-            facebook_app_key:
+            facebook_app_id:
                 description:
                     - Application ID.
                     - Required only for "facebook" strategy.
@@ -224,16 +235,6 @@ options:
             gitlab_base_url:
                 description:
                     - For self-managed GitLab instances, define the base URL (e.g. https://gitlab.example.com). Leave default for GitLab.com SaaS (https://gitlab.com).
-                    - Required only for "gitlab" strategy.
-                type: str
-            gitlab_authorization_url:
-                description:
-                    - For self-managed GitLab instances, define an alternate authorization URL (e.g. http://example.com/oauth/authorize).
-                    - Required only for "gitlab" strategy.
-                type: str
-            gitlab_token_url:
-                description:
-                    - For self-managed GitLab instances, define an alternate token URL (e.g. http://example.com/oauth/token).
                     - Required only for "gitlab" strategy.
                 type: str
             google_client_id:
@@ -714,9 +715,9 @@ options:
 
 author:
     - Dmitry Shemin (@dshemin)
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 # Pass in a message
 - name: Test with a message
   my_namespace.my_collection.my_test:
@@ -732,9 +733,9 @@ EXAMPLES = r'''
 - name: Test failure of the module
   my_namespace.my_collection.my_test:
     name: fail me
-'''
+"""
 
-RETURN = r'''
+RETURN = r"""
 # These are examples of possible return values, and in general should use other names for return values.
 original_message:
     description: The original name param that was passed in.
@@ -746,465 +747,681 @@ message:
     type: str
     returned: always
     sample: 'goodbye'
-'''
+"""
+
+access_mapping = {
+    "auth0": {
+        "domain": "domain",
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+    },
+    "azure": {
+        "entrypoint": "entryPoint",
+        "client_id": "clientId",
+        "cookie_encryption_key": "cookieEncryptionKeyString",
+    },
+    "cas": {
+        "base_url": "baseUrl",
+        "server_url": "casUrl",
+        "version": "casVersion",
+        "attr_key_email": "emailAttribute",
+        "attr_key_display_name": "displayNameAttribute",
+        "attr_key_unique_id": "uniqueIdAttribute",
+    },
+    "discord": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "server_id": "guildId",
+    },
+    "dropbox": {
+        "app_key": "clientId",
+        "app_secret": "clientSecret",
+    },
+    "facebook": {
+        "app_id": "clientId",
+        "app_secret": "clientSecret",
+    },
+    "github": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "enterprise": "useEnterprise",
+        "enterprise_domain": "enterpriseDomain",
+        "enterprise_user_endpoint": "enterpriseUserEndpoint",
+    },
+    "gitlab": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "base_url": "baseUrl",
+    },
+    "google": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "hosted_domain": "hostedDomain",
+    },
+    "keycloak": {
+        "host": "host",
+        "realm": "realm",
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "authorization_endpoint": "authorizationURL",
+        "token_endpoint": "tokenURL",
+        "user_info_endpoint": "userInfoURL",
+        "logout_from_keycloak_on_logout": "logoutUpstream",
+        "logout_endpoint": "logoutURL",
+    },
+    "ldap": {
+        "url": "url",
+        "admin_bind_dn": "bindDn",
+        "admin_bind_credentials": "bindCredentials",
+        "search_base": "searchBase",
+        "search_filter": "searchFilter",
+        "use_tls": "tlsEnabled",
+        "verify_cert": "verifyTLSCertificate",
+        "tls_cert_path": "tlsCertPath",
+        "mapping_uid": "mappingUID",
+        "mapping_email": "mappingEmail",
+        "mapping_name": "mappingDisplayName",
+        "mapping_avatar": "mappingPicture",
+        "map_groups": "mapGroups",
+        "group_search_base": "groupSearchBase",
+        "group_search_filter": "groupSearchFilter",
+        "group_search_scope": "groupSearchScope",
+        "group_dn_property": "groupDnProperty",
+        "group_mapping_name": "groupNameField",
+    },
+    "oauth2": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "authorization_endpoint": "authorizationURL",
+        "token_endpoint": "tokenURL",
+        "user_info_endpoint": "userInfoURL",
+        "id_claim": "userIdClaim",
+        "display_name_claim": "displayNameClaim",
+        "email_claim": "emailClaim",
+        "map_groups": "mapGroups",
+        "groups_claim": "groupsClaim",
+        "logout_url": "logoutURL",
+        "scope": "scope",
+        "pass_access_token_via_get_query_to_user_info_endpoint": "useQueryStringForAccessToken",
+        "enable_csrf": "enableCSRFProtection",
+    },
+    "oidc": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "authorization_endpoint": "authorizationURL",
+        "token_endpoint": "tokenURL",
+        "user_info_endpoint": "userInfoURL",
+        "skip_user_profile": "skipUserProfile",
+        "issuer": "issuer",
+        "email_claim": "emailClaim",
+        "display_name_claim": "displayNameClaim",
+        "map_groups": "mapGroups",
+        "groups_claim": "groupsClaim",
+        "logout_url": "logoutURL",
+    },
+    "okta": {
+        "org_url": "audience",
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "idp": "idp",
+    },
+    "rocketchat": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "server_url": "siteURL",
+    },
+    "saml": {
+        "entrypoint": "entryPoint",
+        "issuer": "issuer",
+        "audience": "audience",
+        "cert": "cert",
+        "priv_key": "privateKey",
+        "decryption_priv_key": "decryptionPvk",
+        "signature_algorithm": "signatureAlgorithm",
+        "digest_algorithm": "digestAlgorithm",
+        "name_id_format": "identifierFormat",
+        "always_sign_assertion": "wantAssertionsSigned",
+        "accepted_clock_skew_milliseconds": "acceptedClockSkewMs",
+        "disable_requested_auth_context": "disableRequestedAuthnContext",
+        "auth_context": "authnContext",
+        "rac_comparison_type": "racComparison",
+        "force_initial_reauth": "forceAuthn",
+        "passive": "passive",
+        "provider_name": "providerName",
+        "skip_request_compression": "skipRequestCompression",
+        "request_binding": "authnRequestBinding",
+        "mapping_uid": "mappingUID",
+        "mapping_email": "mappingEmail",
+        "mapping_display_name": "mappingDisplayName",
+        "mapping_avatar": "mappingPicture",
+    },
+    "slack": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+        "workspace_id": "team",
+    },
+    "twitch": {
+        "client_id": "clientId",
+        "client_secret": "clientSecret",
+    },
+}
 
 
-def run_module():
+def create_authentication_strategy_input(d: dict) -> AuthenticationStrategyInput:
+    """
+    Converts ansible data for single strategy to the proper request.
+    """
+    strategy_key = d["strategy_key"]
+    cfg = []
+    for k, v in access_mapping[strategy_key].items():
+        value = {
+            "v": d[f"{strategy_key}_{k}"],
+        }
+        kv = KeyValuePair(v, json.dumps(value))
+        cfg.append(kv)
+
+    return AuthenticationStrategyInput(
+        d["assign_to_group"],
+        cfg,
+        d["name"],
+        d["limit_to_email_domain"],
+        d["is_enabled"],
+        d["key"],
+        d["order"],
+        d["allow_self_registration"],
+        d["strategy_key"],
+    )
+
+
+def run_module() -> None:
     # define available arguments/parameters a user can pass to the module
-    module_args = dict(
-        endpoint=dict(
-            type='str',
-            required=True,
-        ),
-        auth_username=dict(
-            type='str',
-            required=True,
-        ),
-        auth_password=dict(
-            type='str',
-            required=True,
-            no_log=True,
-        ),
-        strategies=dict(
-            type='list',
-            disposition='/strategies',
-            elements='dict',
-            options=dict(
-                key=dict(
-                    type='str',
-                    required=True,
-                ),
-                strategyKey=dict(
-                    type='str',
-                    required=True,
-                    choices=[
-                        'auth0',
-                        'azure',
-                        'cas',
-                        'discord',
-                        'dropbox',
-                        'facebook',
-                        'github',
-                        'gitlab',
-                        'google',
-                        'keycloak',
-                        'ldap',
-                        'oauth2',
-                        'oidc',
-                        'okta',
-                        'rocketchat',
-                        'saml',
-                        'slack',
-                        'twitch',
+    module_args = {
+        "endpoint": {
+            "type": "str",
+            "required": True,
+        },
+        "auth_username": {
+            "type": "str",
+            "required": True,
+        },
+        "auth_password": {
+            "type": "str",
+            "required": True,
+            "no_log": True,
+        },
+        "strategies": {
+            "type": "list",
+            "disposition": "/strategies",
+            "elements": "dict",
+            "options": {
+                "key": {
+                    "type": "str",
+                    "required": True,
+                },
+                "strategy_key": {
+                    "type": "str",
+                    "required": True,
+                    "choices": [
+                        "auth0",
+                        "azure",
+                        "cas",
+                        "discord",
+                        "dropbox",
+                        "facebook",
+                        "github",
+                        "gitlab",
+                        "google",
+                        "keycloak",
+                        "ldap",
+                        "oauth2",
+                        "oidc",
+                        "okta",
+                        "rocketchat",
+                        "saml",
+                        "slack",
+                        "twitch",
                     ],
-                ),
-                name=dict(
-                    type='str',
-                    required=True,
-                ),
-                allow_self_registration=dict(
-                    type='bool',
-                    required=True,
-                    default=False,
-                ),
-                limit_to_email_domain=dict(
-                    type='list',
-                    elements='str',
-                ),
-                assign_to_group=dict(
-                    type='list',
-                    elements='int',
-                ),
-                auth0_domain=dict(
-                    type='str',
-                ),
-                auth0_client_id=dict(
-                    type='str',
-                ),
-                auth0_client_secret=dict(
-                    type='str',
-                ),
-                azure_ad=dict(
-                    type='str',
-                ),
-                azure_client_id=dict(
-                    type='str',
-                ),
-                azure_cookie_encryption_key=dict(
-                    type='str',
-                ),
-                cas_base_url=dict(
-                    type='str',
-                ),
-                cas_server_url=dict(
-                    type='str',
-                ),
-                cas_version=dict(
-                    type='str',
-                    default='CAS3.0',
-                ),
-                cas_attr_key_email=dict(
-                    type='str',
-                    default='email',
-                ),
-                cas_attr_key_username=dict(
-                    type='str',
-                ),
-                cas_attr_key_id=dict(
-                    type='str',
-                ),
-                discord_client_id=dict(
-                    type='str',
-                ),
-                discord_client_secret=dict(
-                    type='str',
-                ),
-                discord_server_id=dict(
-                    type='str',
-                ),
-                dropbox_app_key=dict(
-                    type='str',
-                ),
-                dropbox_app_secret=dict(
-                    type='str',
-                ),
-                facebook_app_key=dict(
-                    type='str',
-                ),
-                facebook_app_secret=dict(
-                    type='str',
-                ),
-                github_client_id=dict(
-                    type='str',
-                ),
-                github_client_secret=dict(
-                    type='str',
-                ),
-                github_enterprise=dict(
-                    type='str',
-                ),
-                github_enterprise_domain=dict(
-                    type='str',
-                ),
-                github_enterprise_user_endpoint=dict(
-                    type='str',
-                ),
-                gitlab_client_id=dict(
-                    type='str',
-                ),
-                gitlab_client_secret=dict(
-                    type='str',
-                ),
-                gitlab_base_url=dict(
-                    type='str',
-                ),
-                gitlab_authorization_url=dict(
-                    type='str',
-                ),
-                gitlab_token_url=dict(
-                    type='str',
-                ),
-                google_client_id=dict(
-                    type='str',
-                ),
-                google_client_secret=dict(
-                    type='str',
-                ),
-                google_hosted_domain=dict(
-                    type='str',
-                ),
-                keycloak_host=dict(
-                    type='str',
-                ),
-                keycloak_realm=dict(
-                    type='str',
-                ),
-                keycloak_client_id=dict(
-                    type='str',
-                ),
-                keycloak_client_secret=dict(
-                    type='str',
-                ),
-                keycloak_authorization_endpoint=dict(
-                    type='str',
-                ),
-                keycloak_token_endpoint=dict(
-                    type='str',
-                ),
-                keycloak_user_info_endpoint=dict(
-                    type='str',
-                ),
-                keycloak_logout_from_keycloak_on_logout=dict(
-                    type='bool',
-                    default=False,
-                ),
-                keycloak_logout_endpoint=dict(
-                    type='str',
-                ),
-                ldap_url=dict(
-                    type='str',
-                ),
-                ldap_admin_bind_dn=dict(
-                    type='str',
-                ),
-                ldap_admin_bind_credentials=dict(
-                    type='str',
-                ),
-                ldap_search_base=dict(
-                    type='str',
-                ),
-                ldap_search_filter=dict(
-                    type='str',
-                ),
-                ldap_use_tls=dict(
-                    type='bool',
-                    default=False,
-                ),
-                ldap_verify_cert=dict(
-                    type='bool',
-                    default=True,
-                ),
-                ldap_tls_cert_path=dict(
-                    type='str',
-                ),
-                ldap_mapping_uid=dict(
-                    type='str',
-                ),
-                ldap_mapping_email=dict(
-                    type='str',
-                ),
-                ldap_mapping_name=dict(
-                    type='str',
-                ),
-                ldap_mapping_avatar=dict(
-                    type='str',
-                ),
-                ldap_map_groups=dict(
-                    type='bool',
-                    default=False,
-                ),
-                ldap_group_search_base=dict(
-                    type='str',
-                ),
-                ldap_group_search_filter=dict(
-                    type='str',
-                ),
-                ldap_group_search_scope=dict(
-                    type='str',
-                ),
-                ldap_group_dn_property=dict(
-                    type='str',
-                ),
-                ldap_group_mapping_name=dict(
-                    type='str',
-                ),
-                oauth2_client_id=dict(
-                    type='str',
-                ),
-                oauth2_client_secret=dict(
-                    type='str',
-                ),
-                oauth2_authorization_endpoint=dict(
-                    type='str',
-                ),
-                oauth2_token_endpoint=dict(
-                    type='str',
-                ),
-                oauth2_user_info_endpoint=dict(
-                    type='str',
-                ),
-                oauth2_id_claim=dict(
-                    type='str',
-                ),
-                oauth2_display_name_claim=dict(
-                    type='str',
-                ),
-                oauth2_email_claim=dict(
-                    type='str',
-                ),
-                oauth2_map_groups=dict(
-                    type='bool',
-                    default=False,
-                ),
-                oauth2_groups_claim=dict(
-                    type='str',
-                ),
-                oauth2_logout_url=dict(
-                    type='str',
-                ),
-                oauth2_scope=dict(
-                    type='str',
-                ),
-                oauth2_pass_access_token_via_get_query_to_user_info_endpoint=dict(
-                    type='str',
-                ),
-                oauth2_enable_csrf=dict(
-                    type='str',
-                ),
-                oidc_client_id=dict(
-                    type='str',
-                ),
-                oidc_client_secret=dict(
-                    type='str',
-                ),
-                oidc_authorization_endpoint=dict(
-                    type='str',
-                ),
-                oidc_token_endpoint=dict(
-                    type='str',
-                ),
-                oidc_user_info_endpoint=dict(
-                    type='str',
-                ),
-                oidc_skip_user_profile=dict(
-                    type='str',
-                ),
-                oidc_issuer=dict(
-                    type='str',
-                ),
-                oidc_email_claim=dict(
-                    type='str',
-                ),
-                oidc_display_name_claim=dict(
-                    type='str',
-                ),
-                oidc_map_groups=dict(
-                    type='bool',
-                    default=False,
-                ),
-                oidc_groups_claim=dict(
-                    type='str',
-                ),
-                oidc_logout_url=dict(
-                    type='str',
-                ),
-                okta_org_url=dict(
-                    type='str',
-                ),
-                okta_client_id=dict(
-                    type='str',
-                ),
-                okta_client_secret=dict(
-                    type='str',
-                ),
-                okta_idp=dict(
-                    type='str',
-                ),
-                rocketchat_client_id=dict(
-                    type='str',
-                ),
-                rocketchat_client_secret=dict(
-                    type='str',
-                ),
-                rocketchat_server_url=dict(
-                    type='str',
-                ),
-                saml_entrypoint=dict(
-                    type='str',
-                ),
-                saml_issuer=dict(
-                    type='str',
-                ),
-                saml_audience=dict(
-                    type='str',
-                ),
-                saml_cert=dict(
-                    type='str',
-                ),
-                saml_priv_key=dict(
-                    type='str',
-                ),
-                saml_decryption_priv_key=dict(
-                    type='str',
-                ),
-                saml_signature_algorithm=dict(
-                    type='str',
-                    choices=['sha1', 'sha256', 'sha512'],
-                ),
-                saml_digest_algorithm=dict(
-                    type='str',
-                    choices=['sha1', 'sha256', 'sha512'],
-                ),
-                saml_name_id_format=dict(
-                    type='str',
-                ),
-                saml_always_sign_assertion=dict(
-                    type='bool',
-                    default=False,
-                ),
-                saml_accepted_clock_skew_milliseconds=dict(
-                    type='int'
-                ),
-                saml_disable_requested_auth_context=dict(
-                    type='bool',
-                    default=False,
-                ),
-                saml_auth_context=dict(
-                    type='str',
-                ),
-                saml_rac_comparison_type=dict(
-                    type='str',
-                    choices=['exact', 'minimum', 'maximum', 'better']
-                ),
-                saml_force_initial_reauth=dict(
-                    type='bool',
-                    default=False,
-                ),
-                saml_passive=dict(
-                    type='bool',
-                    default=False,
-                ),
-                saml_provider_name=dict(
-                    type='str',
-                ),
-                saml_skip_request_compression=dict(
-                    type='str',
-                ),
-                saml_request_binding=dict(
-                    type='str',
-                    choices=['HTTP-POST', 'HTTP-Redirect'],
-                ),
-                saml_mapping_uid=dict(
-                    type='str',
-                ),
-                saml_mapping_email=dict(
-                    type='str',
-                ),
-                saml_mapping_display_name=dict(
-                    type='str',
-                ),
-                saml_mapping_avatar=dict(
-                    type='str',
-                ),
-                slack_client_id=dict(
-                    type='str',
-                ),
-                slack_client_secret=dict(
-                    type='str',
-                ),
-                slack_workspace_id=dict(
-                    type='str',
-                ),
-                twitch_client_id=dict(
-                    type='str',
-                ),
-                twitch_client_secret=dict(
-                    type='str',
-                ),
-            ),
-        ),
-    )
+                },
+                "name": {
+                    "type": "str",
+                    "required": True,
+                },
+                "allow_self_registration": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "limit_to_email_domain": {
+                    "type": "list",
+                    "elements": "str",
+                },
+                "assign_to_group": {
+                    "type": "list",
+                    "elements": "int",
+                },
+                "is_enabled": {
+                    "type": "bool",
+                    "default": True,
+                },
+                "order": {
+                    "type": "int",
+                },
+                "auth0_domain": {
+                    "type": "str",
+                },
+                "auth0_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "auth0_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "azure_entrypoint": {
+                    "type": "str",
+                },
+                "azure_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "azure_cookie_encryption_key": {
+                    "type": "str",
+                },
+                "cas_base_url": {
+                    "type": "str",
+                },
+                "cas_server_url": {
+                    "type": "str",
+                },
+                "cas_version": {
+                    "type": "str",
+                    "default": "CAS3.0",
+                },
+                "cas_attr_key_email": {
+                    "type": "str",
+                    "default": "email",
+                },
+                "cas_attr_key_display_name": {
+                    "type": "str",
+                },
+                "cas_attr_key_unique_id": {
+                    "type": "str",
+                },
+                "discord_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "discord_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "discord_server_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "dropbox_app_key": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "dropbox_app_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "facebook_app_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "facebook_app_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "github_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "github_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "github_enterprise": {
+                    "type": "str",
+                },
+                "github_enterprise_domain": {
+                    "type": "str",
+                },
+                "github_enterprise_user_endpoint": {
+                    "type": "str",
+                },
+                "gitlab_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "gitlab_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "gitlab_base_url": {
+                    "type": "str",
+                },
+                "google_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "google_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "google_hosted_domain": {
+                    "type": "str",
+                },
+                "keycloak_host": {
+                    "type": "str",
+                },
+                "keycloak_realm": {
+                    "type": "str",
+                },
+                "keycloak_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "keycloak_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "keycloak_authorization_endpoint": {
+                    "type": "str",
+                },
+                "keycloak_token_endpoint": {
+                    "type": "str",
+                },
+                "keycloak_user_info_endpoint": {
+                    "type": "str",
+                },
+                "keycloak_logout_from_keycloak_on_logout": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "keycloak_logout_endpoint": {
+                    "type": "str",
+                },
+                "ldap_url": {
+                    "type": "str",
+                },
+                "ldap_admin_bind_dn": {
+                    "type": "str",
+                },
+                "ldap_admin_bind_credentials": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "ldap_search_base": {
+                    "type": "str",
+                },
+                "ldap_search_filter": {
+                    "type": "str",
+                },
+                "ldap_use_tls": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "ldap_verify_cert": {
+                    "type": "bool",
+                    "default": True,
+                },
+                "ldap_tls_cert_path": {
+                    "type": "str",
+                },
+                "ldap_mapping_uid": {
+                    "type": "str",
+                },
+                "ldap_mapping_email": {
+                    "type": "str",
+                },
+                "ldap_mapping_name": {
+                    "type": "str",
+                },
+                "ldap_mapping_avatar": {
+                    "type": "str",
+                },
+                "ldap_map_groups": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "ldap_group_search_base": {
+                    "type": "str",
+                },
+                "ldap_group_search_filter": {
+                    "type": "str",
+                },
+                "ldap_group_search_scope": {
+                    "type": "str",
+                },
+                "ldap_group_dn_property": {
+                    "type": "str",
+                },
+                "ldap_group_mapping_name": {
+                    "type": "str",
+                },
+                "oauth2_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "oauth2_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "oauth2_authorization_endpoint": {
+                    "type": "str",
+                },
+                "oauth2_token_endpoint": {
+                    "type": "str",
+                },
+                "oauth2_user_info_endpoint": {
+                    "type": "str",
+                },
+                "oauth2_id_claim": {
+                    "type": "str",
+                },
+                "oauth2_display_name_claim": {
+                    "type": "str",
+                },
+                "oauth2_email_claim": {
+                    "type": "str",
+                },
+                "oauth2_map_groups": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "oauth2_groups_claim": {
+                    "type": "str",
+                },
+                "oauth2_logout_url": {
+                    "type": "str",
+                },
+                "oauth2_scope": {
+                    "type": "str",
+                },
+                "oauth2_pass_access_token_via_get_query_to_user_info_endpoint": {
+                    "type": "str",
+                },
+                "oauth2_enable_csrf": {
+                    "type": "str",
+                },
+                "oidc_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "oidc_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "oidc_authorization_endpoint": {
+                    "type": "str",
+                },
+                "oidc_token_endpoint": {
+                    "type": "str",
+                },
+                "oidc_user_info_endpoint": {
+                    "type": "str",
+                },
+                "oidc_skip_user_profile": {
+                    "type": "str",
+                },
+                "oidc_issuer": {
+                    "type": "str",
+                },
+                "oidc_email_claim": {
+                    "type": "str",
+                },
+                "oidc_display_name_claim": {
+                    "type": "str",
+                },
+                "oidc_map_groups": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "oidc_groups_claim": {
+                    "type": "str",
+                },
+                "oidc_logout_url": {
+                    "type": "str",
+                },
+                "okta_org_url": {
+                    "type": "str",
+                },
+                "okta_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "okta_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "okta_idp": {
+                    "type": "str",
+                },
+                "rocketchat_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "rocketchat_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "rocketchat_server_url": {
+                    "type": "str",
+                },
+                "saml_entrypoint": {
+                    "type": "str",
+                },
+                "saml_issuer": {
+                    "type": "str",
+                },
+                "saml_audience": {
+                    "type": "str",
+                },
+                "saml_cert": {
+                    "type": "str",
+                },
+                "saml_priv_key": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "saml_decryption_priv_key": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "saml_signature_algorithm": {
+                    "type": "str",
+                    "choices": ["sha1", "sha256", "sha512"],
+                },
+                "saml_digest_algorithm": {
+                    "type": "str",
+                    "choices": ["sha1", "sha256", "sha512"],
+                },
+                "saml_name_id_format": {
+                    "type": "str",
+                },
+                "saml_always_sign_assertion": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "saml_accepted_clock_skew_milliseconds": {
+                    "type": "int",
+                },
+                "saml_disable_requested_auth_context": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "saml_auth_context": {
+                    "type": "str",
+                },
+                "saml_rac_comparison_type": {
+                    "type": "str",
+                    "choices": ["exact", "minimum", "maximum", "better"],
+                },
+                "saml_force_initial_reauth": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "saml_passive": {
+                    "type": "bool",
+                    "default": False,
+                },
+                "saml_provider_name": {
+                    "type": "str",
+                },
+                "saml_skip_request_compression": {
+                    "type": "str",
+                },
+                "saml_request_binding": {
+                    "type": "str",
+                    "choices": ["HTTP-POST", "HTTP-Redirect"],
+                },
+                "saml_mapping_uid": {
+                    "type": "str",
+                },
+                "saml_mapping_email": {
+                    "type": "str",
+                },
+                "saml_mapping_display_name": {
+                    "type": "str",
+                },
+                "saml_mapping_avatar": {
+                    "type": "str",
+                },
+                "slack_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "slack_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "slack_workspace_id": {
+                    "type": "str",
+                },
+                "twitch_client_id": {
+                    "type": "str",
+                    "no_log": True,
+                },
+                "twitch_client_secret": {
+                    "type": "str",
+                    "no_log": True,
+                },
+            },
+        },
+    }
 
-    result = dict(
-        changed=False,
-        original_message='',
-        message=''
-    )
+    result = {
+        "old": None,
+        "new": None,
+        "changed": False,
+    }
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
+
+    if module.params["strategies"] is None:
+        module.fail_json(msg="strategies is empty")
 
     if not HAS_GQL:
         module.fail_json(msg="python gql package not installed on target host")
@@ -1213,14 +1430,34 @@ def run_module():
         module.exit_json(**result)
 
     client = WikiJSClient(
-        str(module.params['endpoint']),
-        str(module.params['auth_username']),
-        str(module.params['auth_password']),
+        str(module.params["endpoint"]),
+        str(module.params["auth_username"]),
+        str(module.params["auth_password"]),
     )
 
-    previous = client.get_list_of_authentications()
+    old = client.get_list_of_authentications()
+    old = [x.to_authentication_strategy_input() for x in old]
 
-    result["previous"] = [x.to_dict() for x in previous]
+    new = [create_authentication_strategy_input(x) for x in module.params["strategies"]]
+    # Copy Local strategy to new, because we cannot drop it.
+    local = None
+    for v in old:
+        if v.key == "local":
+            local = v
+            break
+
+    if local is not None:
+        new.append(local)
+
+    result["old"] = [x.to_dict() for x in old]
+    result["new"] = [x.to_dict() for x in new]
+
+    changed = is_authentication_strategy_inputs_diff(old, new)
+    result["changed"] = changed
+
+    if changed:
+        client.put_list_of_authentications(new)
+
     module.exit_json(**result)
 
 
@@ -1228,5 +1465,5 @@ def main():
     run_module()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

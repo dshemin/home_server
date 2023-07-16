@@ -10,3 +10,21 @@
     endpoint: "http://wiki.home/graphql"
     auth_username: "{{ wikijs_admin_login }}"
     auth_password: "{{ wikijs_admin_password }}"
+    strategies:
+      - key: "1a6d37c9-0dec-443c-8fa4-aeb949a00747"
+        strategy_key: "keycloak"
+        name: "keycloak"
+        allow_self_registration: true
+        limit_to_email_domain: []
+        assign_to_group: []
+        is_enabled: true
+        order: 0
+        keycloak_host: "http://keycloak.home:1080"
+        keycloak_realm: "home"
+        keycloak_client_id: "home-client"
+        keycloak_client_secret: "{{ wikijs_keycloak_client_secret }}"
+        keycloak_authorization_endpoint: "http://keycloak.home:1080/realms/home/protocol/openid-connect/auth"
+        keycloak_token_endpoint: "http://keycloak.home:1080/realms/home/protocol/openid-connect/token"
+        keycloak_user_info_endpoint: "http://keycloak.home:1080/realms/home/protocol/openid-connect/userinfo"
+        keycloak_logout_from_keycloak_on_logout: false
+        keycloak_logout_endpoint: "http://keycloak.home:1080/realms/home/protocol/openid-connect/logout"

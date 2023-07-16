@@ -9,3 +9,6 @@
       wikijs_version: "2.2.0"
       wikijs_namespace: "{{ prod_namespace }}"
       wikijs_db_instance_name: "{{ main_db_instance_name }}"
+      wikijs_admin_login: "{{ wikijs.admin.login }}"
+      wikijs_admin_password: "{{ wikijs.admin.password }}"
+      wikijs_keycloak_client_secret: "{{ keycloak.secret }}"

@@ -6,6 +6,7 @@ wikijs_db_instance_name: "{{ undef(hint='You must specify DB Instance name for W
 wikijs_db_name: "wikijs"
 wikijs_db_secret_name: "wikijs-database"
 
-wikijs_admin_login: "admin@wiki.home"
-# TODO remove becore commit
-wikijs_admin_password: "123456"
+wikijs_admin_login: "{{ undef(hint='You must specify Wiki.js admin login') }}"
+wikijs_admin_password: "{{ undef(hint='You must specify Wiki.js admin password') }}"
+
+wikijs_keycloak_client_secret: "{{ undef(hint='You must specify Keycloack authentications strategy client secret') }}"
