@@ -12,4 +12,5 @@ List of used components:
 - [Wiki.js](https://js.wiki/) - wiki engine
 - [Cert Manager](https://cert-manager.io/) - X.509 certificate management
 - [DB Operator](https://github.com/kloeckner-i/db-operator) - database management
+- [PGAdmin](https://www.pgadmin.org/) - administration and development platform for PostgreSQL
 - [Keycloak](https://www.keycloak.org/) - Open Source Identity and Access Management

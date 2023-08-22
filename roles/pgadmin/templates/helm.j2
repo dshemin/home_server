@@ -1,0 +1,25 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: pgadmin
+  namespace: {{ pgadmin_namespace | quote }}
+spec:
+  chart: pgadmin4
+  repo: https://dshemin.github.io/charts/
+  targetNamespace: {{ pgadmin_namespace | quote }}
+  version: {{ pgadmin_version | quote }}
+  valuesContent: |-
+    ingress:
+      enabled: true
+      hosts:
+        - host: pgadmin.home
+          paths:
+            - path: /
+              pathType: Prefix
+    persistentVolume:
+      enabled: false
+    env:
+      email: {{ pgadmin_root_email | quote }}
+    existingSecret: {{ pgadmin_secret_name | quote }}
+    serverDefinitions:
+      enabled: true

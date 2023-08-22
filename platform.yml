@@ -29,6 +29,15 @@
       postgresql_namespace: "{{ prod_namespace }}"
       postgresql_admin_password: "{{ postgresql.root_password }}"
 
+    - role: "pgadmin"
+      pgadmin_version: "0.0.1"
+      pgadmin_namespace: "{{ prod_namespace }}"
+      pgadmin_root_email: "{{ pgadmin.root_email }}"
+      pgadmin_root_password: "{{ pgadmin.root_password }}"
+      pgadmin_postgres_host: "postgresql.{{ prod_namespace }}.svc.cluster.local"
+      pgadmin_postgres_secret_name: "postgresql-secret"
+      pgadmin_postgres_secret_password_key: "postgres-password"
+
     - role: "keycloak"
       keycloak_version: "14.2.0"
       keycloak_namespace: "{{ prod_namespace }}"

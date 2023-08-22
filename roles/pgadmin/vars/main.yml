@@ -1,0 +1,22 @@
+---
+pgadmin_version: "{{ undef(hint='You must specify pgAdmin version') }}"
+pgadmin_namespace: "{{ undef(hint='You must specify pgAdmin namespace') }}"
+
+pgadmin_root_email: "{{ undef(hint='You must specify pgAdmin root email') }}"
+pgadmin_root_password: "{{ undef(hint='You must specify pgAdmin root password') }}"
+
+pgadmin_postgres_host: "{{ undef(hint='You must specify Postgres host') }}"
+pgadmin_secret_name: "pgadmin-secret"
+pgadmin_servers_json_template_configmap: "pgadmin-servers-json-template"
+
+pgadmin_servers:
+  Servers:
+    inner:
+      Name: "Inner"
+      Group: "Servers"
+      Host: "{{ pgadmin_postgres_host }}"
+      Port: 5432
+      MaintenanceDB: "postgres"
+      Username: "postgres"
+      SSLMode: "prefer"
+      Comment: "Inner PostgreSQL server"

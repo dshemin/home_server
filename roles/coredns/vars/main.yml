@@ -21,6 +21,7 @@ coredns_arch:
   aarch64: "arm64"
 
 coredns_names:
+  - pgadmin.home
   - keycloak.home
   - wiki.home
   - master.home
