@@ -24,11 +24,11 @@ DOCUMENTATION = r"""
 ---
 module: wikijs_authentications
 
-short_description: Manage API keys in WikiJS
+short_description: Manage authentications in WikiJS
 
 version_added: "1.0.0"
 
-description: Enable or disable API access to WikiJS and manage API keys.
+description: Manage authentications in WikiJS.
 
 options:
     endpoint:

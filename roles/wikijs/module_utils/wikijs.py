@@ -11,6 +11,9 @@ import json
 import copy
 from gql import gql, Client as InnerClient
 from gql.transport.aiohttp import AIOHTTPTransport
+import aiohttp
+import asyncio
+from urllib.parse import urljoin
 
 
 def class_to_dict(cls, skipped: list[str]) -> dict:
@@ -51,6 +54,29 @@ class DTO:
         Converts this class to dictionary.
         """
         return class_to_dict(self, [])
+
+
+class FinalizeRequest(DTO):
+    """
+    Represents request to finalize method.
+    """
+
+    admin_email: str
+    admin_password: str
+    site_url: str
+    telemetry: bool
+
+    def __init__(
+        self,
+        admin_email: str,
+        admin_password: str,
+        site_url: str,
+        telemetry: bool,
+    ) -> FinalizeRequest:
+        self.admin_email = admin_email
+        self.admin_password = admin_password
+        self.site_url = site_url
+        self.telemetry = telemetry
 
 
 class KeyValuePair(DTO):
@@ -281,6 +307,30 @@ class UpdateListOfAuthenticationError(BaseException):
     pass
 
 
+def finalize(url: str, request: FinalizeRequest) -> (bool, str):
+    """
+    Finalize WikiJS setup.
+    """
+    url = urljoin(url, "finalize")
+    return asyncio.run(__finalize(url, request))
+
+
+async def __finalize(url: str, request: FinalizeRequest) -> (bool, str):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, data=request.to_dict()) as resp:
+            match resp.status:
+                # We successfully finalize WikiJS setup.
+                case 200:
+                    return True, ""
+
+                # This is a normal case, we already finalize WikiJS setup.
+                case 404:
+                    return False, ""
+
+            # Something went wrong.
+            return False, await resp.text()
+
+
 class Client:
     """
     Client for WikiJS API.
@@ -333,6 +383,7 @@ class Client:
 
         result = client.execute(query, variable_values=variables)
         return result["authentication"]["login"]["jwt"]
+
 
     def get_list_of_authentications(self) -> list[AuthenticationActiveStrategy]:
         """
