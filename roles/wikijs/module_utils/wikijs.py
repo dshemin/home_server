@@ -318,14 +318,13 @@ def finalize(url: str, request: FinalizeRequest) -> (bool, str):
 async def __finalize(url: str, request: FinalizeRequest) -> (bool, str):
     async with aiohttp.ClientSession() as session:
         async with session.post(url, data=request.to_dict()) as resp:
-            match resp.status:
+            if resp.status == 200:
                 # We successfully finalize WikiJS setup.
-                case 200:
-                    return True, ""
+                return True, ""
 
+            if resp.status == 404:
                 # This is a normal case, we already finalize WikiJS setup.
-                case 404:
-                    return False, ""
+                return False, ""
 
             # Something went wrong.
             return False, await resp.text()

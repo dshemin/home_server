@@ -5,13 +5,16 @@
       - "gql"
       - "aiohttp"
 
+- name: "Wait until WikiJS is up"
+  ansible.builtin.shell: "kubectl wait --for=jsonpath='{.status.phase}'=Running --namespace={{ wikijs_namespace }} pod --selector='app.kubernetes.io/name=wiki' --timeout=60s"
+  changed_when: false
+
 - name: "Setup WikiJS"
   wikijs_finalize:
-    endpoint: "http://localhost:3000"
+    endpoint: "http://wiki.home/"
     admin_email: "{{ wikijs_admin_login }}"
     admin_password: "{{ wikijs_admin_password }}"
     site_url: "http://wiki.home"
-  delegate_to: localhost
 
 - name: "Add keycloak authentications"
   wikijs_authentications:
