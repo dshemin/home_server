@@ -12,3 +12,7 @@
       wikijs_admin_login: "{{ wikijs.admin.login }}"
       wikijs_admin_password: "{{ wikijs.admin.password }}"
       wikijs_keycloak_client_secret: "{{ keycloak.secret }}"
+
+    - role: "dashy"
+      dashy_version: "0.1.3"
+      dashy_namespace: "{{ prod_namespace }}"

@@ -1,0 +1,3 @@
+---
+dashy_version: "{{ undef(hint='You must specify Dashy version') }}"
+dashy_namespace: "{{ undef(hint='You must specify Dashy namespace') }}"

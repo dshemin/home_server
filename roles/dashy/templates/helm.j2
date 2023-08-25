@@ -1,0 +1,25 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: dashy
+  namespace: {{ dashy_namespace | quote }}
+spec:
+  chart: dashy
+  repo: https://dshemin.github.io/charts/
+  targetNamespace: {{ dashy_namespace | quote }}
+  version: {{ dashy_version | quote }}
+  valuesContent: |-
+    ingress:
+      enabled: true
+      hosts:
+        - host: master.home
+          paths:
+            - path: /
+              pathType: Prefix
+    dashyConfig:
+      pageInfo:
+        title: "Home server"
+        description: "An entry point to all applications"
+      appConfig:
+        language: "ru"
+        theme: "Adventure"

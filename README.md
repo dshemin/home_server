@@ -14,3 +14,4 @@ List of used components:
 - [DB Operator](https://github.com/kloeckner-i/db-operator) - database management
 - [PGAdmin](https://www.pgadmin.org/) - administration and development platform for PostgreSQL
 - [Keycloak](https://www.keycloak.org/) - Open Source Identity and Access Management
+- [Dashy](https://dashy.to/) - A self-hostable personal dashboard
